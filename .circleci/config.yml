@@ -1,13 +1,13 @@
 version: 2
 jobs:
   build:
-    # docker:
-    #   - image: circleci/golang:latest
-    machine: true
+    docker:
+      - image: circleci/classic:latest
+    # machine: true
       # -image: ubuntu-1604:201903-01
     steps:
       - checkout
-      # - setup_remote_docker
+      - setup_remote_docker
       - run:
           name: Install SDK
           command: |
@@ -81,13 +81,13 @@ jobs:
           name: Get service IP
           command: kubectl get service
   deploy-production:
-    # docker:
-    #   - image: circleci/golang:latest
-    machine: true
+    docker:
+      - image: circleci/classic:latest
+    # machine: true
       # -image: ubuntu-1604:201903-01
     steps:
       - checkout
-      # - setup_remote_docker
+      - setup_remote_docker
       - run:
           name: Log in to Docker Hub
           command: echo "$DOCKER_PASS" | docker login -u $DOCKER_USER --password-stdin
