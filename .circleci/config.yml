@@ -3,10 +3,11 @@ jobs:
   build:
     docker:
       - image: circleci/golang:latest
-    working_directory: ./hello-app
+    # working_directory: ./hello-app
     steps:
       - checkout
       - setup_remote_docker
+      - run: pwd
       - run:
           name: Install SDK
           command: |
