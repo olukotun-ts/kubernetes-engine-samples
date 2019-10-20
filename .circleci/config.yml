@@ -3,11 +3,9 @@ jobs:
   build:
     docker:
       - image: circleci/golang:latest
-    working_directory: ~/circleci/project/hello-app
     steps:
       - checkout
       - setup_remote_docker
-      - run: pwd
       - run:
           name: Install SDK
           command: |
@@ -25,17 +23,18 @@ jobs:
       - run: 
           name: Build and push image
           command: |
+            cd ~/circleci/project/hello-app
+
             # Configure Docker to authenticate to GCR:
             gcloud auth configure-docker
 
-            docker build -t gcr.io/${GOOGLE_PROJECT_ID}/hello-app:v1 -f ~/circleci/project/hello-app
+            docker build -t gcr.io/${GOOGLE_PROJECT_ID}/hello-app:v1 .
 
             # Upload image to GCR
             docker push gcr.io/${GOOGLE_PROJECT_ID}/hello-app:v1
   deploy-k8s:
     docker:
       - image: circleci/golang:latest
-    working_directory: ~/circleci/project/hello-app
     steps:
       - checkout
       - setup_remote_docker
@@ -55,10 +54,14 @@ jobs:
             sudo apt-get update && sudo apt-get install google-cloud-sdk kubectl
       - run:
             name: Deploy app
-            command: kubectl create deployment hello-web --image=gcr.io/${GOOGLE_PROJECT_ID}/hello-app:v1
+            command: |
+              cd ~/circleci/project/hello-app
+              kubectl create deployment hello-web --image=gcr.io/${GOOGLE_PROJECT_ID}/hello-app:v1
       - run:
             name: Expose port
-            comman: kubectl expose deployment hello-web --type=LoadBalancer --port 80 --target-port 8080
+            command: |
+              cd ~/circleci/project/hello-app
+              kubectl expose deployment hello-web --type=LoadBalancer --port 80 --target-port 8080
   deploy-production:
     docker:
       - image: circleci/golang:latest
