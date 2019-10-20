@@ -4,7 +4,7 @@ jobs:
     # docker:
     #   - image: circleci/golang:latest
     machine:
-      -image: circleci/classic:latest
+      -image: ubuntu-1604:201903-01
     steps:
       - checkout
       # - setup_remote_docker
@@ -84,7 +84,7 @@ jobs:
     # docker:
     #   - image: circleci/golang:latest
     machine:
-      -image: circleci/classic:latest
+      -image: ubuntu-1604:201903-01
     steps:
       - checkout
       # - setup_remote_docker
