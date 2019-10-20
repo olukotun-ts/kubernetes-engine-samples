@@ -62,13 +62,17 @@ jobs:
           name: Argo deploy
           command: |
             cd ~/project/hello-app/
-            # Install Argo CD
-            kubectl create namespace argocd
-            kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+            # # Install Argo CD. Only run once.
+            # kubectl create namespace argocd
+            # kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+            # kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
 
             # Grant permission to create new cluster rules
             kubectl create clusterrolebinding ${PREFIX}-cluster-admin-binding --clusterrole=cluster-admin --user=${EMAIL}
 
+            # Login
+            kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2
+            
   deploy-production:
     docker:
       - image: circleci/golang:latest
