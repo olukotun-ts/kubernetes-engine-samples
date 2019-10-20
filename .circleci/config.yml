@@ -6,7 +6,6 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - run: pwd
       - run:
           name: Install SDK
           command: |
@@ -41,6 +40,21 @@ jobs:
 
             # Upload image to GCR
             docker push gcr.io/${GOOGLE_PROJECT_ID}/hello-app:v1
+      - run:
+          name: Deploy app
+          command: |
+            cd ~/project/hello-app/
+            # Generate kubeconfig entry
+            gcloud container clusters get-credentials hello-cluster --zone $GOOGLE_COMPUTE_ZONE
+
+            # Deploy app
+            kubectl create deployment hello-web --image=gcr.io/${GOOGLE_PROJECT_ID}/hello-app:v1
+            
+            # Expose port          
+            kubectl expose deployment hello-web --type=LoadBalancer --port 80 --target-port 8080
+      - run:
+          name: Get service IP
+          command: kubectl get service
   deploy-k8s:
     docker:
       - image: circleci/golang:latest
