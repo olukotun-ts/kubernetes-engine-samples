@@ -25,6 +25,15 @@ jobs:
           name: Build and push image
           command: |
             cd ~/project/hello-app/
+
+            # Store service account:
+            echo $GCLOUD_SERVICE_KEY > gcloud-service-key.json
+
+            # Initialize gcloud CLI:
+            gcloud auth activate-service-account --key-file=gcloud-service-key.json
+            gcloud --quiet config set project $GOOGLE_PROJECT_ID
+            gcloud --quiet config set compute/zone $GOOGLE_COMPUTE_ZONE
+
             # Configure Docker to authenticate to GCR:
             gcloud auth configure-docker
 
