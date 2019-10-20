@@ -57,36 +57,6 @@ jobs:
       - run:
           name: Get service IP
           command: kubectl get service
-  deploy-k8s:
-    docker:
-      - image: circleci/golang:latest
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Install SDK
-          command: |
-            # Add the Cloud SDK distribution URI as a package source:
-            echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-
-            # Make sure you have apt-transport-https installed:
-            sudo apt-get install apt-transport-https ca-certificates
-
-            # Import the Google Cloud public key:
-            curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
-
-            # Update and install the Cloud SDK, kubectl
-            sudo apt-get update && sudo apt-get install google-cloud-sdk kubectl
-      - run:
-            name: Deploy app
-            command: |
-              cd ~/project/hello-app/
-              kubectl create deployment hello-web --image=gcr.io/${GOOGLE_PROJECT_ID}/hello-app:${CIRCLE_SHA1}
-      - run:
-            name: Expose port
-            command: |
-              cd ~/project/hello-app/            
-              kubectl expose deployment hello-web --type=LoadBalancer --port 80 --target-port 8080
   deploy-production:
     docker:
       - image: circleci/golang:latest
@@ -120,13 +90,10 @@ workflows:
   build_test_and_deploy:
     jobs:
       - build
-      - deploy-k8s:
-          requires:
-            - build
       - promote-to-production:
           type: approval  
           requires:
-            - deploy-k8s
+            - build
       - deploy-production:
           requires:
             - promote-to-production
