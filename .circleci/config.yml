@@ -27,6 +27,8 @@ jobs:
           command: |
             cd ~/project/hello-app/
 
+            export DOCKER_TLS_CERTDIR=''
+
             # Store service account:
             echo $GCLOUD_SERVICE_KEY > gcloud-service-key.json
 
