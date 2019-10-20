@@ -36,10 +36,10 @@ jobs:
             # Configure Docker to authenticate to GCR:
             gcloud auth configure-docker
 
-            docker build -t gcr.io/${GOOGLE_PROJECT_ID}/hello-app:${CIRCLE_SHA1} .
+            sudo docker build -t gcr.io/${GOOGLE_PROJECT_ID}/hello-app:${CIRCLE_SHA1} .
 
             # Upload image to GCR
-            docker push gcr.io/${GOOGLE_PROJECT_ID}/hello-app:${CIRCLE_SHA1}
+            sudo docker push gcr.io/${GOOGLE_PROJECT_ID}/hello-app:${CIRCLE_SHA1}
       - run:
           name: Deploy app
           command: |
