@@ -3,6 +3,7 @@ jobs:
   build:
     docker:
       - image: circleci/golang:latest
+    working_directory: ./hello-app
     steps:
       - checkout
       - setup_remote_docker
@@ -36,6 +37,7 @@ jobs:
   deploy-k8s:
     docker:
       - image: circleci/golang:latest
+    working_directory: ./hello-app
     steps:
       - checkout
       - setup_remote_docker
@@ -65,6 +67,7 @@ jobs:
   deploy-production:
     docker:
       - image: circleci/golang:latest
+    working_directory: ./hello-app
     steps:
       - checkout
       - setup_remote_docker
