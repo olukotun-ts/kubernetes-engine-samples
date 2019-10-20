@@ -8,8 +8,5 @@ sudo apt-get install apt-transport-https ca-certificates
 # Import the Google Cloud public key:
 curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
 
-# Update and install the Cloud SDK
-sudo apt-get update && sudo apt-get install google-cloud-sdk
-
-# Install kubectl
-gcloud components install kubectl
+# Update and install the Cloud SDK, kubectl
+sudo apt-get update && sudo apt-get install google-cloud-sdk kubectl
