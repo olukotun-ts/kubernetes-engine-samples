@@ -36,10 +36,10 @@ jobs:
             # Configure Docker to authenticate to GCR:
             gcloud auth configure-docker
 
-            docker build -t gcr.io/${GOOGLE_PROJECT_ID}/hello-app:v1 .
+            docker build -t gcr.io/${GOOGLE_PROJECT_ID}/hello-app:${CIRCLE_SHA1} .
 
             # Upload image to GCR
-            docker push gcr.io/${GOOGLE_PROJECT_ID}/hello-app:v1
+            docker push gcr.io/${GOOGLE_PROJECT_ID}/hello-app:${CIRCLE_SHA1}
       - run:
           name: Deploy app
           command: |
@@ -47,11 +47,13 @@ jobs:
             # Generate kubeconfig entry
             gcloud container clusters get-credentials hello-cluster --zone $GOOGLE_COMPUTE_ZONE
 
-            # Deploy app
-            kubectl create deployment hello-web --image=gcr.io/${GOOGLE_PROJECT_ID}/hello-app:v1
-            
-            # Expose port          
-            kubectl expose deployment hello-web --type=LoadBalancer --port 80 --target-port 8080
+            ## Deploy app. Only run once.
+            # kubectl create deployment hello-web --image=gcr.io/${GOOGLE_PROJECT_ID}/hello-app:${CIRCLE_SHA1}
+            ## Expose port          
+            # kubectl expose deployment hello-web --type=LoadBalancer --port 80 --target-port 8080
+
+            # Apply rolling update
+            kubectl set image deployment/hello-web hello-app=gcr.io/${GOOGLE_PROJECT_ID}/hello-app:${CIRCLE_SHA1}
       - run:
           name: Get service IP
           command: kubectl get service
@@ -79,7 +81,7 @@ jobs:
             name: Deploy app
             command: |
               cd ~/project/hello-app/
-              kubectl create deployment hello-web --image=gcr.io/${GOOGLE_PROJECT_ID}/hello-app:v1
+              kubectl create deployment hello-web --image=gcr.io/${GOOGLE_PROJECT_ID}/hello-app:${CIRCLE_SHA1}
       - run:
             name: Expose port
             command: |
