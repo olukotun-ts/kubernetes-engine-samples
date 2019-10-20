@@ -26,8 +26,7 @@ jobs:
           name: Build and push image
           command: |
             cd ~/project/hello-app/
-
-            export DOCKER_TLS_CERTDIR=''
+            docker --version
 
             # Store service account:
             echo $GCLOUD_SERVICE_KEY > gcloud-service-key.json
