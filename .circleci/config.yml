@@ -20,6 +20,8 @@ jobs:
 
             # Update and install the Cloud SDK, kubectl
             sudo apt-get update && sudo apt-get install google-cloud-sdk kubectl
+      - run: sudo apt-get update && sudo apt-get install lsb-release && sudo lsb_release -a      
+      - run: docker --version
       - run: 
           name: Build and push image
           command: |
@@ -35,8 +37,6 @@ jobs:
 
             # Configure Docker to authenticate to GCR:
             gcloud auth configure-docker
-
-            docker --version
 
             docker build -t gcr.io/${GOOGLE_PROJECT_ID}/hello-app:${CIRCLE_SHA1} .
 
