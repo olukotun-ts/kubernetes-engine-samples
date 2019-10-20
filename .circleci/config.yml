@@ -2,9 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/classic:latest
-    # machine: true
-      # -image: ubuntu-1604:201903-01
+      - image: circleci/golang:latest
     steps:
       - checkout
       - setup_remote_docker
@@ -82,9 +80,7 @@ jobs:
           command: kubectl get service
   deploy-production:
     docker:
-      - image: circleci/classic:latest
-    # machine: true
-      # -image: ubuntu-1604:201903-01
+      - image: circleci/golang:latest
     steps:
       - checkout
       - setup_remote_docker
