@@ -58,10 +58,10 @@ jobs:
 
             # Install kubectl
             gcloud components install kubectl
-        - run:
+      - run:
             name: Deploy app
             command: kubectl create deployment hello-web --image=gcr.io/${GOOGLE_PROJECT_ID}/hello-app:v1
-        - run:
+      - run:
             name: Expose port
             comman: kubectl expose deployment hello-web --type=LoadBalancer --port 80 --target-port 8080
   deploy-production:
