@@ -3,6 +3,7 @@ jobs:
   build:
     docker:
       - image: circleci/golang:latest
+      - image: argoproj/argocd:latest
     steps:
       - checkout
       - setup_remote_docker
@@ -57,6 +58,17 @@ jobs:
       - run:
           name: Get service IP
           command: kubectl get service
+      - run:
+          name: Argo deploy
+          command: |
+            cd ~/project/hello-app/
+            # Install Argo CD
+            kubectl create namespace argocd
+            kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+            # Grant permission to create new cluster rules
+            kubectl create clusterrolebinding ${PREFIX}-cluster-admin-binding --clusterrole=cluster-admin --user=${EMAIL}
+
   deploy-production:
     docker:
       - image: circleci/golang:latest
