@@ -1,0 +1,107 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:latest
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install SDK
+          command: |
+            # Add the Cloud SDK distribution URI as a package source:
+            echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+
+            # Make sure you have apt-transport-https installed:
+            sudo apt-get install apt-transport-https ca-certificates
+
+            # Import the Google Cloud public key:
+            curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+
+            # Update and install the Cloud SDK
+            sudo apt-get update && sudo apt-get install google-cloud-sdk
+
+            # Install kubectl
+            gcloud components install kubectl
+      - run: 
+          name: Build and push image
+          command: |
+            # Configure Docker to authenticate to GCR:
+            gcloud auth configure-docker
+
+            docker build -t gcr.io/${GOOGLE_PROJECT_ID}/hello-app:v1 .
+
+            # Upload image to GCR
+            docker push gcr.io/${GOOGLE_PROJECT_ID}/hello-app:v1
+  deploy-k8s:
+    docker:
+      - image: circleci/golang:latest
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install SDK
+          command: |
+            # Add the Cloud SDK distribution URI as a package source:
+            echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+
+            # Make sure you have apt-transport-https installed:
+            sudo apt-get install apt-transport-https ca-certificates
+
+            # Import the Google Cloud public key:
+            curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+
+            # Update and install the Cloud SDK
+            sudo apt-get update && sudo apt-get install google-cloud-sdk
+
+            # Install kubectl
+            gcloud components install kubectl
+        - run:
+            name: Deploy app
+            command: kubectl create deployment hello-web --image=gcr.io/${GOOGLE_PROJECT_ID}/hello-app:v1
+        - run:
+            name: Expose port
+            comman: kubectl expose deployment hello-web --type=LoadBalancer --port 80 --target-port 8080
+  deploy-production:
+    docker:
+      - image: circleci/golang:latest
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Log in to Docker Hub
+          command: echo "$DOCKER_PASS" | docker login -u $DOCKER_USER --password-stdin
+      - run:
+          name: Pull Docker image from Docker Hub
+          command: docker pull olukotunts/app:$CIRCLE_SHA1
+      - run:
+          name: Install Heroku CLI
+          command: curl https://cli-assets.heroku.com/install.sh | sh
+      - run:
+          name: Log in to Heroku Container Registry
+          command: heroku container:login
+      - run:
+          name: Tag Docker image
+          command: docker tag olukotunts/app:$CIRCLE_SHA1 registry.heroku.com/name-button/web
+      - run:
+          name: Push Docker image to Heroku
+          command: docker push registry.heroku.com/name-button/web
+      - run:
+          name: Deploy Docker image to Heroku
+          command: heroku container:release --app name-button web
+
+workflows:
+  version: 2
+  build_test_and_deploy:
+    jobs:
+      - build
+      - deploy-k8s:
+          requires:
+            - build
+      - promote-to-production:
+          type: approval  
+          requires:
+            - deploy-k8s
+      - deploy-production:
+          requires:
+            - promote-to-production
