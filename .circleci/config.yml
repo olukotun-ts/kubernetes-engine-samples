@@ -67,7 +67,6 @@ jobs:
 
             # Update and install the Cloud SDK, kubectl
             sudo apt-get update && sudo apt-get install google-cloud-sdk kubectl
-      - run: sudo apt-get update && sudo apt-get install lsb-release && sudo lsb_release -a      
       - run: 
           name: Set up authentication
           command: |
@@ -104,7 +103,7 @@ jobs:
             sudo chmod +x /usr/local/bin/argocd
 
             # List current cluster contexts
-            argocd cluster add
+            argocd cluster list
       - run:
           name: Argo check
           command: |
