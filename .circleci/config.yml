@@ -20,13 +20,11 @@ jobs:
 
             # Update and install the Cloud SDK, kubectl
             sudo apt-get update && sudo apt-get install google-cloud-sdk kubectl
-      - run: sudo apt-get update && sudo apt-get install lsb-release && sudo lsb_release -a      
       - run: docker --version
       - run: 
           name: Build and push image
           command: |
             cd ~/project/hello-app/
-            docker --version
 
             # Store service account:
             echo $GCLOUD_SERVICE_KEY > gcloud-service-key.json
@@ -100,6 +98,14 @@ jobs:
             # Apply rolling update
             kubectl set image deployment/hello-web hello-app=gcr.io/${GOOGLE_PROJECT_ID}/hello-app:${CIRCLE_SHA1}
       - run:
+          name: Install Argo CD CLI
+          command: |
+            sudo curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v1.2.3/argocd-linux-amd64
+            sudo chmod +x /usr/local/bin/argocd
+
+            # List current cluster contexts
+            argocd cluster add
+      - run:
           name: Argo check
           command: |
             # cd ~/project/hello-app/
@@ -115,8 +121,9 @@ jobs:
             # # Grant permission to create new cluster rules. Only run once.
             # kubectl create clusterrolebinding ${PREFIX}-cluster-admin-binding --clusterrole=cluster-admin --user=${EMAIL}
 
-            # Login
-            kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2
+            # # List pods in argocd namespace
+            # kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2
+            kubectl get pods -n argocd
       - run:
           name: IP check
           command: kubectl get services
