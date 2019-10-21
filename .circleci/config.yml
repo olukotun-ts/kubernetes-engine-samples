@@ -43,6 +43,48 @@ jobs:
 
             # Upload image to GCR
             docker push gcr.io/${GOOGLE_PROJECT_ID}/hello-app:${CIRCLE_SHA1}
+  test:
+    docker:
+      - image: circleci/golang:latest
+    steps:
+      - checkout
+      - run: echo "No tests specified"
+  deploy-staging:
+    docker:
+      - image: circleci/golang:latest
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install SDK
+          command: |
+            # Add the Cloud SDK distribution URI as a package source:
+            echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+
+            # Make sure you have apt-transport-https installed:
+            sudo apt-get install apt-transport-https ca-certificates
+
+            # Import the Google Cloud public key:
+            curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+
+            # Update and install the Cloud SDK, kubectl
+            sudo apt-get update && sudo apt-get install google-cloud-sdk kubectl
+      - run: sudo apt-get update && sudo apt-get install lsb-release && sudo lsb_release -a      
+      - run: 
+          name: Set up authentication
+          command: |
+            cd ~/project/hello-app/
+
+            # Store service account:
+            echo $GCLOUD_SERVICE_KEY > gcloud-service-key.json
+
+            # Initialize gcloud CLI:
+            gcloud auth activate-service-account --key-file=gcloud-service-key.json
+            gcloud --quiet config set project $GOOGLE_PROJECT_ID
+            gcloud --quiet config set compute/zone $GOOGLE_COMPUTE_ZONE
+
+            # Configure Docker to authenticate to GCR:
+            gcloud auth configure-docker
       - run:
           name: Deploy app
           command: |
@@ -58,9 +100,9 @@ jobs:
             # Apply rolling update
             kubectl set image deployment/hello-web hello-app=gcr.io/${GOOGLE_PROJECT_ID}/hello-app:${CIRCLE_SHA1}
       - run:
-          name: Argo deploy
+          name: Argo check
           command: |
-            cd ~/project/hello-app/
+            # cd ~/project/hello-app/
             # # Install Argo CD. Only run once.
             # kubectl create namespace argocd
             # kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
@@ -76,7 +118,7 @@ jobs:
             # Login
             kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2
       - run:
-          name: Get service IP
+          name: IP check
           command: kubectl get service
   deploy-production:
     docker:
@@ -111,6 +153,11 @@ workflows:
   build_test_and_deploy:
     jobs:
       - build
+      - test
+      - deploy-staging
+          requires:
+            - build
+            - test
       - promote-to-production:
           type: approval  
           requires:
