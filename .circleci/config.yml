@@ -119,7 +119,7 @@ jobs:
             kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2
       - run:
           name: IP check
-          command: kubectl get service
+          command: kubectl get services
   deploy-production:
     docker:
       - image: circleci/golang:latest
