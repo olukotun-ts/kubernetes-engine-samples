@@ -154,14 +154,14 @@ workflows:
     jobs:
       - build
       - test
-      - deploy-staging
+      - deploy-staging:
           requires:
             - build
             - test
       - promote-to-production:
           type: approval  
           requires:
-            - build
+            - deploy-staging
       - deploy-production:
           requires:
             - promote-to-production
